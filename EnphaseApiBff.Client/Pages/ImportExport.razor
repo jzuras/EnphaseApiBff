@@ -1,0 +1,139 @@
+﻿@page "/enphase-system/{SystemId:int}/import-export"
+
+@rendermode @(new InteractiveAutoRenderMode(prerender: false))
+
+@attribute [Authorize]
+
+<h3>Energy Import/Export - System @SystemId</h3>
+
+@if (this.IsLoading)
+{
+    <p>Loading import/export data...</p>
+}
+else if (this.Error != null)
+{
+    <div class="alert alert-danger">
+        <p>Error: @this.Error</p>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Energy Import/Export History</h4>
+            <p>Import data from @this.ImportData.StartDate | Export data from @this.ExportData.StartDate</p>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Import Summary</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status:</span>
+                            <span class="badge @(this.ImportData.Meta.Status == "normal" ? "bg-success" : "bg-warning")">
+                                @this.ImportData.Meta.Status
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Total Import:</span>
+                            <strong>@(this.ImportData.Import.Sum().ToString("N0")) Wh</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Average Import:</span>
+                            <strong>@((this.ImportData.Import.Count > 0 ? this.ImportData.Import.Sum() / this.ImportData.Import.Count : 0).ToString("N0")) Wh</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Data Points:</span>
+                            <strong>@this.ImportData.Import.Count</strong>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-6">
+                    <h5>Export Summary</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status:</span>
+                            <span class="badge @(this.ExportData.Meta.Status == "normal" ? "bg-success" : "bg-warning")">
+                                @this.ExportData.Meta.Status
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Total Export:</span>
+                            <strong>@(this.ExportData.Export.Sum().ToString("N0")) Wh</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Average Export:</span>
+                            <strong>@((this.ExportData.Export.Count > 0 ? this.ExportData.Export.Sum() / this.ExportData.Export.Count : 0).ToString("N0")) Wh</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Data Points:</span>
+                            <strong>@this.ExportData.Export.Count</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h5>Import/Export Data</h5>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped table-sm">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Import (Wh)</th>
+                                    <th>Export (Wh)</th>
+                                    <th>Net (Wh)</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var maxCount = Math.Max(this.ImportData.Import.Count, this.ExportData.Export.Count);
+                                    long balance = 0;
+                                }
+                                @for (int i = 0; i < maxCount; i++)
+                                {
+                                    var importValue = i < this.ImportData.Import.Count ? this.ImportData.Import[i] : 0;
+                                    var exportValue = i < this.ExportData.Export.Count ? this.ExportData.Export[i] : 0;
+                                    var netValue = exportValue - importValue;
+                                    balance += netValue;
+
+                                    <tr>
+                                        <td>@(DateTime.Parse(this.ImportData.StartDate).AddDays(i).ToString("yyyy-MM-dd"))</td>
+                                        <td class="text-danger">@importValue.ToString("N0")</td>
+                                        <td class="text-success">@exportValue.ToString("N0")</td>
+                                        <td class="@(netValue >= 0 ? "text-success" : "text-danger")">
+                                            @(netValue > 0 ? "+" : "")@netValue.ToString("N0")
+                                        </td>
+                                        <td class="@(balance >= 0 ? "text-success" : "text-danger")">
+                                            @if (i > 0)
+                                            {
+                                                @(balance > 0 ? "+" : "")
+
+                                                @balance.ToString("N0")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">--</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a href="/enphase-systems" class="btn btn-primary">Back to Systems</a>
+            <a href="/enphase-system/@SystemId" class="btn btn-info">System Summary</a>
+            <a href="/enphase-system/@SystemId/energy-lifetime" class="btn btn-success">View Energy Lifetime</a>
+            <a href="/enphase-system/@SystemId/devices" class="btn btn-secondary">View Devices</a>
+        </div>
+    </div>
+}

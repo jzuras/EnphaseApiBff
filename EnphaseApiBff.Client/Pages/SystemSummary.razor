@@ -1,0 +1,100 @@
+﻿@page "/enphase-system/{SystemId:int}"
+
+@rendermode @(new InteractiveAutoRenderMode(prerender: false))
+
+@attribute [Authorize]
+
+<h3>System Summary</h3>
+
+@if (this.IsLoading)
+{
+    <p>Loading system summary...</p>
+}
+else if (this.Error != null)
+{
+    <div class="alert alert-danger">
+        <p>Error: @this.Error</p>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>System ID: @this.Summary.SystemId</h4>
+            <p>Status: <span class="badge @(this.Summary.Status == "normal" ? "bg-success" : "bg-warning")">@this.Summary.Status</span></p>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Power Information</h5>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Current Power:</span>
+                            <strong>@this.Summary.CurrentPower W</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Size:</span>
+                            <strong>@this.Summary.SizeW W</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Energy Today:</span>
+                            <strong>@this.Summary.EnergyToday Wh</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Lifetime Energy:</span>
+                            <strong>@this.Summary.EnergyLifetime Wh</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>System Information</h5>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Modules:</span>
+                            <strong>@this.Summary.Modules</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Source:</span>
+                            <strong>@this.Summary.Source</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Summary Date:</span>
+                            <strong>@this.Summary.SummaryDate</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Last Report:</span>
+                            <strong>@(DateTimeOffset.FromUnixTimeSeconds(this.Summary.LastReportAt).ToLocalTime())</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @if (this.Summary.BatteryCapacityWh.HasValue)
+            {
+                <div class="row mt-3">
+                    <div class="col">
+                        <h5>Battery Information</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Battery Capacity:</span>
+                                <strong>@this.Summary.BatteryCapacityWh Wh</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Battery Charge:</span>
+                                <strong>@this.Summary.BatteryChargeW W</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Battery Discharge:</span>
+                                <strong>@this.Summary.BatteryDischargeW W</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <a href="/enphase-system/@SystemId/devices" class="btn btn-info">View System Devices</a>
+            <a href="/enphase-systems" class="btn btn-primary">Back to Systems</a>
+        </div>
+    </div>
+}

@@ -1,0 +1,452 @@
+﻿@page "/enphase-system/{SystemId:int}/devices"
+
+@rendermode @(new InteractiveAutoRenderMode(prerender: false))
+
+@attribute [Authorize]
+
+<h3>System Devices</h3>
+
+@if (this.IsLoading)
+{
+    <p>Loading devices...</p>
+}
+else if (this.Error != null)
+{
+    <div class="alert alert-danger">
+        <p>Error: @this.Error</p>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>System ID: @this.Devices.SystemId</h4>
+            <p>Total Devices: @this.Devices.TotalDevices</p>
+            <p>Micros Summary Signal Strength: @this.Summary.SignalStrength</p>
+        </div>
+
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="deviceTabs" role="tablist">
+                @if (this.Devices.Devices.Micros.Any())
+                {
+                    var tabId = "micros";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#micros" type="button" role="tab"
+                                @onclick="() => this.SetActiveTab(tabId)">
+                            Microinverters (@this.Devices.Devices.Micros.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Summary.MicroInverters.Any())
+                {
+                    var tabId = "micros-summary";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#micros" type="button" role="tab"
+                                @onclick="() => this.SetActiveTab(tabId)">
+                            Micros Summary (@this.Summary.MicroInverters.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.Meters.Any())
+                {
+                    var tabId = "meters";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#meters" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            Meters (@this.Devices.Devices.Meters.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.Gateways.Any())
+                {
+                    var tabId = "gateways";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#gateways" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            Gateways (@this.Devices.Devices.Gateways.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.QRelays.Any())
+                {
+                    var tabId = "relays";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#relays" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            QRelays (@this.Devices.Devices.QRelays.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.Acbs.Any())
+                {
+                    var tabId = "acbs";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#acbs" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            ACBs (@this.Devices.Devices.Acbs.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.Encharges.Any())
+                {
+                    var tabId = "encharges";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#encharges" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            Encharges (@this.Devices.Devices.Encharges.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.Enpowers.Any())
+                {
+                    var tabId = "enpowers";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#enpowers" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            Enpowers (@this.Devices.Devices.Enpowers.Count)
+                        </button>
+                    </li>
+                }
+                @if (this.Devices.Devices.EvChargers.Any())
+                {
+                    var tabId = "evchargers";
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(this.ActiveTab == tabId ? "active" : "" )" data-bs-toggle="tab" data-bs-target="#evchargers" type="button" role="tab"
+                                @onclick="( () => this.SetActiveTab(tabId) )">
+                            EvChargers (@this.Devices.Devices.EvChargers.Count)
+                        </button>
+                    </li>
+                }
+            </ul>
+
+            <div class="tab-content mt-3" id="deviceTabsContent">
+                @if (this.Devices.Devices.Micros.Any())
+                {
+                    var tabId = "micros";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="micros" role="tabpanel">
+                        <h5>Microinverters</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var micro in this.Devices.Devices.Micros)
+                                {
+                                    <tr>
+                                        <td>@micro.Name</td>
+                                        <td>@micro.SerialNumber</td>
+                                        <td>@micro.Model</td>
+                                        <td><span class="badge @(micro.Status == "normal" ? "bg-success" : "bg-warning")">@micro.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(micro.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@micro.Active</td>
+                                        <td>@micro.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Summary.MicroInverters.Any())
+                {
+                    var tabId = "micros-summary";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="micros-summary" role="tabpanel">
+                        <h5>Micros Summary</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Power Produced (W)</th>
+                                    <th>Energy Produced (Wh)</th>
+                                    <th>Last Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var micro in this.Summary.MicroInverters)
+                                {
+                                    <tr>
+                                        <td>@micro.SerialNumber</td>
+                                        <td>@micro.Model</td>
+                                        <td><span class="badge @(micro.Status == "normal" ? "bg-success" : "bg-warning")">@micro.Status</span></td>
+                                        <td>@micro.PowerProduced.Value</td>
+                                        <td>@micro.Energy.Value</td>
+                                        <td>@micro.LastReportDate.ToLocalTime().ToString("g")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.Meters.Any())
+                {
+                    var tabId = "meters";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="meters" role="tabpanel">
+                        <h5>Meters</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Config Type</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var meter in this.Devices.Devices.Meters)
+                                {
+                                    <tr>
+                                        <td>@meter.Name</td>
+                                        <td>@meter.SerialNumber</td>
+                                        <td>@meter.Model</td>
+                                        <td><span class="badge @(meter.Status == "normal" ? "bg-success" : "bg-warning")">@meter.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(meter.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@meter.ConfigType</td>
+                                        <td>@meter.Active</td>
+                                        <td>@meter.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.Gateways.Any())
+                {
+                    var tabId = "gateways";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="gateways" role="tabpanel">
+                        <h5>Gateways</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                    <th>Emu Software Version</th>
+                                    <th>Cell Modem End Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var gateway in this.Devices.Devices.Gateways)
+                                {
+                                    <tr>
+                                        <td>@gateway.Name</td>
+                                        <td>@gateway.SerialNumber</td>
+                                        <td>@gateway.Model</td>
+                                        <td><span class="badge @(gateway.Status == "normal" ? "bg-success" : "bg-warning")">@gateway.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(gateway.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@gateway.Active</td>
+                                        <td>@gateway.ProductName</td>
+                                        <td>@gateway.EmuSwVersion</td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(gateway.CellularModem!.PlanEndDate).ToLocalTime().ToString("g")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @* Add similar tab panels for other device types *@
+
+                @if (this.Devices.Devices.QRelays.Any())
+                {
+                    var tabId = "relays";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="relays" role="tabpanel">
+                        <h5>Relays</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var relays in this.Devices.Devices.QRelays)
+                                {
+                                    <tr>
+                                        <td>@relays.Name</td>
+                                        <td>@relays.SerialNumber</td>
+                                        <td>@relays.Model</td>
+                                        <td><span class="badge @(relays.Status == "normal" ? "bg-success" : "bg-warning")">@relays.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(relays.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@relays.Active</td>
+                                        <td>@relays.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.Acbs.Any())
+                {
+                    var tabId = "acbs";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="acbs" role="tabpanel">
+                        <h5>ACBs</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var acbs in this.Devices.Devices.Acbs)
+                                {
+                                    <tr>
+                                        <td>@acbs.Name</td>
+                                        <td>@acbs.SerialNumber</td>
+                                        <td>@acbs.Model</td>
+                                        <td><span class="badge @(acbs.Status == "normal" ? "bg-success" : "bg-warning")">@acbs.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(acbs.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@acbs.Active</td>
+                                        <td>@acbs.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.Encharges.Any())
+                {
+                    var tabId = "encharges";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="encharges" role="tabpanel">
+                        <h5>Encharges</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var encharges in this.Devices.Devices.Encharges)
+                                {
+                                    <tr>
+                                        <td>@encharges.Name</td>
+                                        <td>@encharges.SerialNumber</td>
+                                        <td>@encharges.Model</td>
+                                        <td><span class="badge @(encharges.Status == "normal" ? "bg-success" : "bg-warning")">@encharges.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(encharges.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@encharges.Active</td>
+                                        <td>@encharges.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.Enpowers.Any())
+                {
+                    var tabId = "enpowers";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="enpowers" role="tabpanel">
+                        <h5>Enpowers</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var enpowers in this.Devices.Devices.Enpowers)
+                                {
+                                    <tr>
+                                        <td>@enpowers.Name</td>
+                                        <td>@enpowers.SerialNumber</td>
+                                        <td>@enpowers.Model</td>
+                                        <td><span class="badge @(enpowers.Status == "normal" ? "bg-success" : "bg-warning")">@enpowers.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(enpowers.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@enpowers.Active</td>
+                                        <td>@enpowers.ProductName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (this.Devices.Devices.EvChargers.Any())
+                {
+                    var tabId = "evchargers";
+                    <div class="tab-pane fade @(this.ActiveTab == tabId ? "show active" : "")" id="evchargers" role="tabpanel">
+                        <h5>EvChargers</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Last Report</th>
+                                    <th>Active</th>
+                                    <th>Product Name</th>
+                                    <th>Firmware</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var evChargers in this.Devices.Devices.EvChargers)
+                                {
+                                    <tr>
+                                        <td>@evChargers.Name</td>
+                                        <td>@evChargers.SerialNumber</td>
+                                        <td>@evChargers.Model</td>
+                                        <td><span class="badge @(evChargers.Status == "normal" ? "bg-success" : "bg-warning")">@evChargers.Status</span></td>
+                                        <td>@DateTimeOffset.FromUnixTimeSeconds(evChargers.LastReportAt).ToLocalTime().ToString("g")</td>
+                                        <td>@evChargers.Active</td>
+                                        <td>@evChargers.ProductName</td>
+                                        <td>@evChargers.Firmware</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a href="/enphase-system/@SystemId" class="btn btn-primary">Back to System Summary</a>
+        </div>
+    </div>
+}

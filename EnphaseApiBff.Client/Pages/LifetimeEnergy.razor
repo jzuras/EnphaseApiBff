@@ -1,0 +1,161 @@
+﻿@page "/enphase-system/{SystemId:int}/energy-lifetime"
+
+@rendermode @(new InteractiveAutoRenderMode(prerender: false))
+
+@attribute [Authorize]
+
+<h3>Energy Lifetime - System @SystemId</h3>
+
+@if (this.IsLoading)
+{
+    <p>Loading energy lifetime data...</p>
+}
+else if (this.Error != null)
+{
+    <div class="alert alert-danger">
+        <p>Error: @this.Error</p>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Energy Production History</h4>
+            <p>Data from @this.EnergyData.StartDate to present</p>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>System Information</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>System Status:</span>
+                            <span class="badge @(this.EnergyData.Meta.Status == "normal" ? "bg-success" : "bg-warning")">
+                                @this.EnergyData.Meta.Status
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Start Date:</span>
+                            <strong>@this.EnergyData.StartDate</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Meter Start Date:</span>
+                            <strong>@this.EnergyData.MeterStartDate</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Last Report:</span>
+                            <strong>@DateTimeOffset.FromUnixTimeSeconds(this.EnergyData.Meta.LastReportAt).ToLocalTime().ToString("g")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Last Energy:</span>
+                            <strong>@DateTimeOffset.FromUnixTimeSeconds(this.EnergyData.Meta.LastEnergyAt).ToLocalTime().ToString("g")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Operational Since:</span>
+                            <strong>@DateTimeOffset.FromUnixTimeSeconds(this.EnergyData.Meta.OperationalAt).ToLocalTime().ToString("g")</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h5>Production Data</h5>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped table-sm">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Production (Wh)</th>
+                                    <th>Consumption (Wh)</th>
+                                    <th>Difference (Wh)</th>
+                                    <th>Micro Production (Wh)</th>
+                                    <th>Meter Production (Wh)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var maxCount1 = Math.Max(this.EnergyData.MeterProduction.Count, this.EnergyData.MicroProduction.Count);
+                                    var maxCount2 = Math.Max(this.EnergyData.Production.Count, this.ConsumptionData.Consumption.Count);
+                                    var maxCount = Math.Max(maxCount1, maxCount2);
+                                }
+                                @for (int i = 0; i < maxCount; i++)
+                                {
+                                    var production = this.EnergyData.Production.ElementAtOrDefault(i);
+                                    var consumption = this.ConsumptionData.Consumption.ElementAtOrDefault(i);
+                                    var microProduction = this.EnergyData.MicroProduction.ElementAtOrDefault(i);
+                                    var meterProduction = this.EnergyData.MeterProduction.ElementAtOrDefault(i);
+                                    var difference = production - consumption;
+
+                                    <tr>
+                                        <td>@(DateTime.Parse(this.EnergyData.StartDate).AddDays(i).ToString("yyyy-MM-dd"))</td>
+                                        <td>@production.ToString("N0")</td>
+                                        <td>@consumption.ToString("N0")</td>
+                                        <td class="@(difference >= 0 ? "text-success" : "text-danger")">
+                                            @(difference > 0 ? "+" : "")@difference.ToString("N0")
+                                        </td>
+                                        <td>@microProduction.ToString("N0")</td>
+                                        <td>@meterProduction.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            @if (this.EnergyData.Production.Count > 1)
+            {
+                <div class="row mt-4">
+                    <div class="col">
+                        <h5>Recent Trends</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h6>Latest Period Growth</h6>
+                                        @{
+                                            var lastTwo = this.EnergyData.Production.TakeLast(2).ToArray();
+                                            var growth = lastTwo.Length == 2 ? lastTwo[1] - lastTwo[0] : 0;
+                                        }
+                                        <h4 class="@(growth >= 0 ? "text-success" : "text-danger")">
+                                            @(growth > 0 ? "+" : "")@growth.ToString("N0") Wh
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h6>Average Production</h6>
+                                        <h4 class="text-info">
+                                            @(((this.EnergyData.Production.Sum() - 14057695) / (this.EnergyData.Production.Count - 1)).ToString("N0")) Wh
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h6>Peak Production</h6>
+                                        <h4 class="text-success">
+                                            @this.EnergyData.Production.Where(p => p < 1000000).DefaultIfEmpty(0).Max().ToString("N0") Wh
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card-footer">
+            <a href="/enphase-systems" class="btn btn-primary">Back to Systems</a>
+            <a href="/enphase-system/@SystemId" class="btn btn-info">System Summary</a>
+            <a href="/enphase-system/@SystemId/import-export" class="btn btn-success">View Import/Export</a>
+            <a href="/enphase-system/@SystemId/devices" class="btn btn-secondary">View Devices</a>
+        </div>
+    </div>
+}

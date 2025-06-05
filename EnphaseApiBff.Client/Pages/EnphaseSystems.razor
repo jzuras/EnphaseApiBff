@@ -1,0 +1,35 @@
+﻿@page "/enphase-systems"
+
+@rendermode @(new InteractiveAutoRenderMode(prerender: true))
+
+@attribute [Authorize]
+
+<h3>Your Enphase Systems</h3>
+
+@if (this.IsLoading is true || base.RendererInfo.IsInteractive is false)
+{
+    <p>Loading systems...</p>
+}
+else if (this.Error != null)
+{
+    <div class="alert alert-danger">
+        <p>Error: @this.Error</p>
+    </div>
+}
+else
+{
+    <div class="list-group mb-4">
+        @foreach (var system in this.Systems)
+        {
+            <div class="list-group-item">
+                <h5>@system.Name (@system.SystemId)</h5>
+                <p>Status: <span class="badge @(system.Status == "normal" ? "bg-success" : "bg-warning")">@system.Status</span></p>
+                <p>Location: @system.Address.City, @system.Address.State, @system.Address.Country</p>
+                <p>Timezone: @system.Timezone</p>
+                <a href="/enphase-system/@system.SystemId" class="btn btn-primary">View Details</a>
+                <a href="/enphase-system/@system.SystemId/energy-lifetime" class="btn btn-success">View Energy Lifetime</a>
+                <a href="/enphase-system/@system.SystemId/import-export" class="btn btn-success">View Import/Export</a>
+            </div>
+        }
+    </div>
+}
