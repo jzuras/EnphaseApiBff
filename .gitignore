@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /appsettings.Development.json
 
+/EnphaseApiBff.Server/appsettings.Development.json
