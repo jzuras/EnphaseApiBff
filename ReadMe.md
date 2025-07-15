@@ -77,7 +77,7 @@ for the shorter lists.
 
 ### Code
 
-Copyright (©) 2025  Jzuras
+Copyright (Â©) 2025  Jzuras
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -92,8 +92,8 @@ GNU General Public License for more details.
 
 ## Trademarks
 
-Enphase(R), Envoy(R) are trademarks of Enphase Energy(R).
+Enphase(R) and Envoy(R) are trademarks of Enphase Energy(R).
 
 All trademarks are the property of their respective owners.
 
-Any trademarks used in this project are used in a purely descriptive manner and to state compatability.
+Any trademarks used in this project are used in a purely descriptive manner and to state compatibility.
